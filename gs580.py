@@ -14,7 +14,7 @@ originally by speigei@gmail.com. See http://code.google.com/p/gh615/
 
 '''
 
-import serial, datetime, timeb
+import serial, datetime, time
 from pytz import timezone, utc
 
 # Commands taken from gh615 code
@@ -92,7 +92,8 @@ def trackfromhex(hex, timezone=utc):
                 hex2dec(hex[2:4]), hex2dec(hex[4:6]),
                 hex2dec(hex[6:8]), hex2dec(hex[8:10]),
                 hex2dec(hex[10:12]), tzinfo=timezone)
-        # Endianess is different in this device
+        # Endianess is different in this devicea
+        t['trackpoints'] = int(hex[14:16] + hex[12:14], 16)
         t['duration'] = int(hex[18:20] + hex[16:18], 16)
         t['distance'] =  int(hex[22:24] + hex[20:22] + hex[26:28] + hex[24:26], 16)
         #track['calories'] = hex2dec(hex[28:32])
@@ -101,7 +102,8 @@ def trackfromhex(hex, timezone=utc):
         t['id'] = hex2dec(hex[38:42])
     print 'raw track: ' + str(hex)
     print 'id ' + str(t['id']) + ' date ' + str(t['date']) + ' duration ' + \
-            parsedecisec(t['duration']) + ' distance ' + str(t['distance']) \
+            parsedecisec(t['duration']) + ' distance ' + str(t['distance']) + \
+            ' trackpoints ' + str(t['trackpoints']) \
             +' laps ' + str(t['laps'])
     return t
 
@@ -122,6 +124,7 @@ def gettracklist():
             trackfromhex(track)
 
 def gettracks(trackids):
+    gdata = ''
     trackids = [dec2hex(str(id), 4) for id in trackids]
     payload = dec2hex((len(trackids) * 512) + 896, 4)
     numberoftracks = dec2hex(len(trackids), 4)
@@ -130,26 +133,30 @@ def gettracks(trackids):
     writeserial('getTracks', **{'payload':payload,
         'numberOfTracks':numberoftracks, 'trackIds':''.join(trackids),
         'checksum':checksum})
-    for i in range(1000):
+#    while(True)
+    for i in range(30):
         data = readserial(2075)
-        print data
         writeserial('requestNextTrackSegment')
+        gdata += data
+    return gdata
 
 #    while True:
 #        data = self._readSerial(2075)
 #        time.sleep(2)
 
 
-print 'Opening serial port at /dev/ttyACM3, 57600 bauds...'
-serial = serial.Serial(port='/dev/ttyACM3', baudrate='57600',
+print 'Opening serial port at /dev/ttyACM0, 57600 bauds...'
+serial = serial.Serial(port='/dev/ttyACM0', baudrate='57600',
     timeout=2)
 
-writeserial('whoAmI')
-print readserial()
+# writeserial('whoAmI')
+# print readserial()
 
 getmodel()
 
 gettracklist()
 
-# gettracks([7])
+track7 = gettracks([0])
+
+print track7
 
