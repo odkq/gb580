@@ -14,7 +14,7 @@ originally by speigei@gmail.com. See http://code.google.com/p/gh615/
 
 '''
 
-import serial, datetime, time
+import serial, datetime, time, optparse
 from pytz import timezone, utc
 
 # Commands taken from gh615 code
@@ -143,7 +143,36 @@ def gettracks(trackids):
 #    while True:
 #        data = self._readSerial(2075)
 #        time.sleep(2)
+usage = '''
+Usage: gb850.py [-fi <input-format>] [-fo <output format>] convert <infile> <outfile>
+                [-d <device>] list
+                [-d <device>] [-fo <output format>] extract <outfile>
 
+                [-i <input file>] [-d <device>] [-fi <input-format>] [-fo <output-format>]
+                [-
+                [-i <inputfile>] [-O
+<outputfile>]
+       formats: GPX FCX ACT
+       if format is ommited, FCX is select by default
+       if input file is ommited, the device is used
+       if output file is ommited, stdout is used
+'''
+if __name__=="__main__":
+    parser = optparse.OptionParser()
+    parser.add_option("-f", "--output-format", dest="output-format", default="FCX",
+                      help="Output format. If ommited, 'FCX'")
+    parser.add_option("-F", "--input-format", dest="input-format", default="stdin",
+                      help="Use <filename> as input file. If ommited, use stdin.",
+                      metavar="FILE")
+    parser.add_option("-o", "--output", dest="output", default="stdout",
+                      help="Use <filename> as output file. If ommited, use stdout.",
+                      metavar="FILE")
+    parser.add_option("-i", "--input", dest="input", default="stdin",
+                      help="Use <filename> as output file. If ommited, use the device itself",
+                      metavar="FILE")
+    parser.add_option("-d", "--device", dest="device", default="/dev/ttyACM0",
+                      help="Use <device> as serial port for the GB850P, if \
+ommited, use /dev/ttyACM0... Find out with dmesg")
 
 print 'Opening serial port at /dev/ttyACM0, 57600 bauds...'
 serial = serial.Serial(port='/dev/ttyACM0', baudrate='57600',
